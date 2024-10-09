@@ -1,0 +1,36 @@
+# 환경 프로필 변경방법
+# 오른쪽 위 클릭 후 Edit configuration... 클릭 > Active profiles에 dev, create, deploy 중 하나 입력
+
+spring:
+  application:
+    name: dongsim
+  profiles:
+    default: dev # 기본 프로파일: dev
+  thymeleaf:
+    cache: false
+
+  # h2 database settings
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+    datasource:
+      driver-class-name: org.h2.Driver
+      url: jdbc:h2:~/test
+      username: sa
+      password:
+
+  # hibernate settings
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
+
+# log4j log level setting
+logging.level.kr.ac.jnu.capstone.bigpicture.dongsim: debug
+
+# for JWT
+jwt:
+  secret: oaiw84yroa8w3yurjd9o8weynoqui3ybvtoqiueyor98wyueor9awyher # 추후 변경필요
+  expire-time: 86400000

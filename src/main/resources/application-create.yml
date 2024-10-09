@@ -1,0 +1,11 @@
+#server settings
+server:
+  port: 8082
+
+spring:
+  config:
+    activate:
+      on-profile: create
+  jpa:
+    hibernate:
+      ddl-auto: update
