@@ -9,22 +9,20 @@ spring:
   thymeleaf:
     cache: false
 
-  # h2 database settings
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-    datasource:
-      driver-class-name: org.h2.Driver
-      url: jdbc:h2:~/test
-      username: sa
-      password:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${DATASOURCE_URL}?useSSL=false&allowPublicKeyRetrieval=true&useUnicode=true&serverTimezone=Asia/Seoul
+    username: ${DATASOURCE_USERNAME}
+    password: ${DATASOURCE_PASSWORD}
 
   # hibernate settings
   jpa:
+    database: mysql
+    database-platform: org.hibernate.dialect.MySQLDialect
     properties:
       hibernate:
         format_sql: true
+        default_batch_fetch_size: 100
     show-sql: true
 
 # log4j log level setting
@@ -32,5 +30,13 @@ logging.level.kr.ac.jnu.capstone.bigpicture.dongsim: debug
 
 # for JWT
 jwt:
-  secret: oaiw84yroa8w3yurjd9o8weynoqui3ybvtoqiueyor98wyueor9awyher # 추후 변경필요
-  expire-time: 86400000
+  secret: ${JWT_SECRET} # 추후 변경필요
+  access:
+    expiration: 86400000 # 1일
+
+# for social login
+oauth:
+  kakao:
+    client:
+      id: ${KAKAO_CLIENT_ID}
+      secret: ${KAKAO_CLIENT_SECRET}

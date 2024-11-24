@@ -1,0 +1,161 @@
+name: CI/CD Github Action
+
+on:
+  push:
+    branches: [ "main", "develop", "create" ]
+
+permissions:
+  contents: read
+
+env:
+  DATASOURCE_URL          : ${{ secrets.ENV_DATASOURCE_URL }}
+  DATASOURCE_USERNAME     : ${{ secrets.ENV_DATASOURCE_USERNAME }}
+  DATASOURCE_PASSWORD     : ${{ secrets.ENV_DATASOURCE_PASSWORD }}
+  JWT_SECRET              : ${{ secrets.ENV_JWT_SECRET }}
+  KAKAO_CLIENT_ID         : ${{ secrets.ENV_KAKAO_CLIENT_ID }}
+  KAKAO_CLIENT_SECRET     : ${{ secrets.ENV_KAKAO_CLIENT_SECRET }}
+  SERVER_DOMAIN_NAME      : ${{ secrets.ENV_SERVER_DOMAIN_NAME }}
+
+jobs:
+  ## 1단계: 프로젝트 빌드
+  Build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'corretto'
+
+      - name: Gradle Caching (for faster build)
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Build Application
+        run: |
+          chmod +x gradlew
+          ./gradlew clean build -x test     
+
+      - name: Store build failure reports (execute when build fail)
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-failure-reports
+          path: |
+            **/build/reports/
+
+      - name: Store build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-artifacts
+          path: build/libs/*.jar
+
+  ## 2단계: Docker 빌드 및 푸시
+  Docker-Build:
+    runs-on: ubuntu-22.04
+    needs: Build
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build-artifacts
+          path: build/libs
+
+      - name: Docker Hub Login
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Docker Build
+        run: docker build -f Dockerfile --build-arg DEPENDENCY=build/dependency -t ${{ secrets.DOCKER_REPO_FULLNAME }} .
+
+      - name: Docker Push
+        run: docker push ${{ secrets.DOCKER_REPO_FULLNAME }}
+
+  ## 3단계: 서버에 배포
+  Deploy:
+    runs-on: ubuntu-22.04
+    needs: Docker-Build
+    if: github.event_name == 'push'
+    steps:
+      - name: Set Profile Based on Branch
+        run: |
+          if [[ "${{ github.ref_name }}" == "create" ]]; then
+            echo "Spring Profile: create"
+            echo "SPRING_PROFILES_ACTIVE=create" >> $GITHUB_ENV
+          else
+            echo "Spring Profile: deploy"
+            echo "SPRING_PROFILES_ACTIVE=deploy" >> $GITHUB_ENV
+          fi
+
+      - name: Update .env
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            cat <<EOF > ~/.env
+            DATASOURCE_URL=$DATASOURCE_URL
+            DATASOURCE_USERNAME=$DATASOURCE_USERNAME
+            DATASOURCE_PASSWORD=$DATASOURCE_PASSWORD
+            JWT_SECRET=$JWT_SECRET
+            KAKAO_CLIENT_ID=$KAKAO_CLIENT_ID
+            KAKAO_CLIENT_SECRET=$KAKAO_CLIENT_SECRET
+            SERVER_DOMAIN_NAME=$SERVER_DOMAIN_NAME
+            SPRING_PROFILES_ACTIVE=$SPRING_PROFILES_ACTIVE
+            EOF
+            echo "Environment setup has been completed."
+
+      - name: Pull New Docker Image
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          envs: GITHUB_SHA
+          script: sudo docker pull ${{ secrets.DOCKER_REPO_FULLNAME }}
+
+      - name: Stop Old Docker Image
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          envs: GITHUB_SHA
+          script: sudo docker stop dongsim
+
+      - name: Run New Docker Image
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          envs: GITHUB_SHA
+          script: sudo docker run --rm -d -p 80:8080 --env-file ~/.env --name dongsim ${{ secrets.DOCKER_REPO_FULLNAME }}
+
+      - name: Clean-Up Docker Image
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          envs: GITHUB_SHA
+          script: sudo docker image prune -f

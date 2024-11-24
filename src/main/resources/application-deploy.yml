@@ -8,7 +8,7 @@ spring:
       on-profile: deploy
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
     show-sql: false
 
 # log4j log level setting
