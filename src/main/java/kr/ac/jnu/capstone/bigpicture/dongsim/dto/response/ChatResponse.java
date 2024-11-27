@@ -17,6 +17,9 @@ import lombok.ToString;
 @Builder
 public class ChatResponse {
 
+    @Schema(description = "채팅 ID", example = "5")
+    private final Long id;
+
     @Schema(description = "채팅 생성 일시", example = "2024-10-20 17:39:21", type = "string")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
     private final LocalDateTime createdAt;
