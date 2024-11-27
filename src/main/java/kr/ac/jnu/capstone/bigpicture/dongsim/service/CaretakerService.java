@@ -8,7 +8,6 @@ import kr.ac.jnu.capstone.bigpicture.dongsim.dto.response.ChildResponse;
 
 public interface CaretakerService {
 
-
     CaretakerResponse getCaretaker(AuthorizedEndpointContext context);
     CaretakerResponse updateCaretaker(AuthorizedEndpointContext context, CaretakerUpdateRequest updateRequest);
     ChildResponse getChild(AuthorizedEndpointContext context);

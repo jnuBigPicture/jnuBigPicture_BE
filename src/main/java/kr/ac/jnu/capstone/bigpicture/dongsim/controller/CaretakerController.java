@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/caretaker")
 @RequiredArgsConstructor
-@Tag(name = "Caretaker - 보호자 API", description = "보호자 정보를 조회하고 수정하는 API")
+@Tag(name = "Caretaker", description = "보호자 정보를 조회하고 수정하는 API")
 public class CaretakerController {
 
     private final CaretakerService caretakerService;

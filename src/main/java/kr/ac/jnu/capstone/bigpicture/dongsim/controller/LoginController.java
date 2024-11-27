@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/login")
 @RequiredArgsConstructor
-@Tag(name = "Auth - 로그인 API", description = "로그인 API")
+@Tag(name = "Auth", description = "로그인 API")
 public class LoginController {
 
     private final LoginService loginService;

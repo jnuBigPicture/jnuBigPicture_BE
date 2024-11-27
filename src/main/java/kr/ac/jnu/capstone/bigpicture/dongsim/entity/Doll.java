@@ -13,6 +13,7 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @SuperBuilder
 @RequiredArgsConstructor
+// 인형
 public class Doll extends EntityBase {
 
     // 모델명
