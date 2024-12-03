@@ -25,18 +25,38 @@ public class ChatResponse {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
     private final LocalDateTime createdAt;
 
-    @Schema(description = "채팅 생성자", example = "child")
+    @Schema(description = "채팅 생성자 유형", example = "child")
     private final ChatSenderType senderType;
+
+    @Schema(description = "채팅 생성자 이름", example = "빵빵이")
+    private final String senderName;
 
     @Schema(description = "채팅 내용", example = "밝은 제가 되고 싶어요.")
     private final String content;
 
     public static ChatResponse from(Chat chat) {
-        return ChatResponse.builder()
+
+        var builder = ChatResponse.builder()
             .id(chat.getId())
             .createdAt(chat.getCreatedAt())
             .senderType(chat.getSenderType())
-            .content(chat.getContent())
-            .build();
+            .content(chat.getContent());
+
+        switch(chat.getSenderType()) {
+            case child:
+                return builder
+                    .senderName(chat.getCaretaker().getChildName())
+                    .build();
+            case caretaker:
+                return builder
+                    .senderName(chat.getCaretaker().getNickname())
+                    .build();
+            case doll:
+                return builder
+                    .senderName(chat.getCaretaker().getDoll().getDollName())
+                    .build();
+            default:
+                throw new RuntimeException("채팅 생성자 유형이 올바르지 않습니다.");
+        }
     }
 }
