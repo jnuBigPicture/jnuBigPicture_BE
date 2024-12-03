@@ -3,6 +3,7 @@ package kr.ac.jnu.capstone.bigpicture.dongsim.dto.response;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
+import kr.ac.jnu.capstone.bigpicture.dongsim.entity.Chat;
 import kr.ac.jnu.capstone.bigpicture.dongsim.enumurate.ChatSenderType;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -29,4 +30,13 @@ public class ChatResponse {
 
     @Schema(description = "채팅 내용", example = "밝은 제가 되고 싶어요.")
     private final String content;
+
+    public static ChatResponse from(Chat chat) {
+        return ChatResponse.builder()
+            .id(chat.getId())
+            .createdAt(chat.getCreatedAt())
+            .senderType(chat.getSenderType())
+            .content(chat.getContent())
+            .build();
+    }
 }

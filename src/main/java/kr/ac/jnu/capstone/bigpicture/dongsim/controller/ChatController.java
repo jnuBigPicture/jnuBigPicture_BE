@@ -57,11 +57,10 @@ public class ChatController {
         ErrorCode.AUTHORIZATION_FAILED})
     @GetMapping("/child-doll-talk")
     public ResponseEntity<ApiResponseBody<List<ChatResponse>>> getChildDollTalkChats(
-        @Parameter(hidden = true) @AuthorizedEndpoint AuthorizedEndpointContext authorizedEndpointContext,
         @Parameter(description = "조회할 하루 단위 날짜", example = "2024-10-20")
             @RequestParam("date") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date)
     {
-        return ResponseEntityBuilder.ok(chatService.getChats(authorizedEndpointContext, ChatType.CHILD_DOLL_TALK, date));
+        return ResponseEntityBuilder.ok(chatService.getChats(new AuthorizedEndpointContext(1L), ChatType.CHILD_DOLL_TALK, date));
     }
 
     @Operation(
