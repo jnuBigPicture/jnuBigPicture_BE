@@ -1,6 +1,5 @@
 package kr.ac.jnu.capstone.bigpicture.dongsim.dto.request;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,8 +14,9 @@ import lombok.ToString;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
-public class ChatRequest {
+public class DialogRequest {
 
-    @Schema(description = "채팅 내용", example = "밝은 제가 되고 싶어요.")
-    private String content;
+    private String originalText;
+    private String generatedText;
+    private String emotion;
 }
