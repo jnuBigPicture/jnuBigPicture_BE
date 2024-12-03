@@ -24,8 +24,8 @@ public class ChatServiceImpl implements ChatService {
     public List<ChatResponse> getChats(AuthorizedEndpointContext context, ChatType chatType,
         LocalDate date) {
         return chatRepository.findAll().stream()
-            .filter(c -> c.getChatType().equals(chatType))
-            .filter(c -> c.getCreatedAt().toLocalDate().equals(date))
+//            .filter(c -> c.getChatType().equals(chatType))
+//            .filter(c -> c.getCreatedAt().toLocalDate().equals(date))
             .map(ChatResponse::from)
             .toList();
     }
